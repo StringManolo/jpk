@@ -244,7 +244,10 @@ List all available or installed packages.
       debug(`Available Packages: ${availablePackages}`);
       console.log("Packages:");
       for (let i in availablePackages) {
-        console.log(`${availablePackages[i]} (${fullPackages[availablePackages[i]].version}) - ${fullPackages[availablePackages[i]].source} - ${fullPackages[availablePackages[i]].description}`); 
+        console.log(`${availablePackages[i]}
+  from ${fullPackages[availablePackages[i]].source}
+  version - ${fullPackages[availablePackages[i]].version}
+  description - ${fullPackages[availablePackages[i]].description}\n`); 
       }
     }
   } else {
