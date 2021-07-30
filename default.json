@@ -1,0 +1,24 @@
+{
+    "js": {
+      "description": "Run javascript from your shell",
+      "version": "0.0.1",
+      "url": "https://github.com/stringmanolo/jpk/default/js/js",
+      "md5sum": "a2bcbed1a1e596ce5db0b0f231c98e6c",
+      "sha1sum": "8ef8ed43154a50ec7aa0e98dcac2b993b3fd69b0",
+      "sha256sum": "57e87c3193868f278c705d338125e9473c30f555f10ca1b00e50fd6af92b0b28",
+      "install": "bin",
+      "engines": [ "quickjs", "node" ],
+      "autoupdate": "false"
+    },
+    "test": {
+      "description": "Test jpk is working",
+      "version": "0.0.1",
+      "url": "https://github.com/stringmanolo/jpk/default/test/test.js",
+      "md5sum": "32950a7ca52c2892a73460dce55590d1", 
+      "sha1sum": "acc838c947ed7079be59958b28239089f5172bb2",
+      "sha256sum": "fd53f512b7a5369150f9a72e6620b832d587ba144c59c5a67b52a135da0770f8",
+      "install": "scripts",
+      "engines": [ "node", "quickjs" ],
+      "autoupdate": "true"
+    }
+}
