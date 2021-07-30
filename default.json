@@ -2,7 +2,7 @@
     "js": {
       "description": "Run javascript from your shell",
       "version": "0.0.1",
-      "url": "https://github.com/stringmanolo/jpk/default/js/js",
+      "url": "https://raw.githubusercontent.com/StringManolo/jpk/master/repos/default/js/js",
       "md5sum": "a2bcbed1a1e596ce5db0b0f231c98e6c",
       "sha1sum": "8ef8ed43154a50ec7aa0e98dcac2b993b3fd69b0",
       "sha256sum": "57e87c3193868f278c705d338125e9473c30f555f10ca1b00e50fd6af92b0b28",

@@ -18,6 +18,82 @@ const isValidUrl = url => {
   return validUrl;
 }
 
+const isValidUrlsFile = filename => {
+  let urls;
+  try {
+    urls = std.loadFile(filename).split("\n");
+  } catch(err) {
+    return false;
+  }
+  urls.pop();
+
+  if (!urls.length) {
+    console.log(`Not urls found in ${filename} file`);
+    return false;
+  }
+  for (let i in urls) {
+    if(!isValidUrl(urls[i])) {
+      console.log(`The url ${urls[i].substr(0, 200)}... extracted from ${filename} is not a valid url`);
+      return false;
+    }
+  }
+  return urls;
+}
+
+const urlPointsToValidJSON = url => {
+  const json = std.urlGet(url + " --silent");
+  const obj = JSON.parse(json);
+  if (obj?.urls?.length) {
+    for (let i in obj.urls) {
+      if (!isValidUrl(obj.urls[i])) {
+        return false;
+      }
+    }
+    return true;
+  } else {
+    return false;
+  }
+}
+
+const addUrlsToJSON = urls => {
+  let json;
+  let fileExists = true;
+  try {
+    json = std.loadFile("repos.json");
+    if (json === null) {
+      throw new Error("File not found");
+    }
+  } catch(err) {
+    json = { urls: [] };
+    console.log("json asigned after file load error");
+    fileExists = false;
+  }
+
+  if (fileExists) {
+    try {
+      json = JSON.parse(json);
+    } catch(err) {
+      fd = std.open(".corrupted_repo.json", "a+");
+      fd.puts(std.loadFile("repos.json"));
+      fd.close();
+      json = { urls: [] };
+      console.log("json asigned after parser error");
+    }
+  }
+
+
+console.log(JSON.stringify(json, null, 2));
+  for (let i in urls) {
+    json.urls.push(urls[i]);
+  }
+
+  json.urls = [...new Set(json.urls)]; // remove duplicates
+
+  const fd = std.open("repos.json", "w");
+  fd.puts(JSON.stringify(json, null, 2));
+  fd.close();
+}
+
 const add = args => {
   if (!args.length) {
     console.log(`USAGE:
@@ -31,7 +107,7 @@ EXAMPLE OF VALID JSON FILE:
     "js": {
       "description": "Run javascript from your shell",
       "version": "0.0.1",
-      "url": "https://github.com/stringmanolo/jpk/default/js/js",
+      "url": "https://raw.githubusercontent.com/StringManolo/jpk/master/repos/default/js/js",
       "md5sum": "a2bcbed1a1e596ce5db0b0f231c98e6c",
       "sha1sum": "8ef8ed43154a50ec7aa0e98dcac2b993b3fd69b0",
       "sha256sum": "57e87c3193868f278c705d338125e9473c30f555f10ca1b00e50fd6af92b0b28",
@@ -42,7 +118,7 @@ EXAMPLE OF VALID JSON FILE:
     "test": {
       "description": "Test jpk is working",
       "version": "0.0.1",
-      "url": "https://github.com/stringmanolo/jpk/default/test/test.js",
+      "url": "https://raw.githubusercontent.com/StringManolo/jpk/master/repos/default/test/test",
       "md5sum": "32950a7ca52c2892a73460dce55590d1",
       "sha1sum": "acc838c947ed7079be59958b28239089f5172bb2",
       "sha256sum": "fd53f512b7a5369150f9a72e6620b832d587ba144c59c5a67b52a135da0770f8",
@@ -55,19 +131,32 @@ EXAMPLE OF VALID JSON FILE:
     return;
   }
  
-  for (let i in args) {
+  for (let i = 0; i < args.length; ++i) {
     if(isValidUrl(args[i]) === false) {
-      console.log(`${args[i]} is not a valid url`);
+      // test if filename
+      const urls = isValidUrlsFile(args[i]);
+      if (urls) { // if urls in file
+	args.splice(i, 1); // remove filename from urls array
+	for (let j in urls) {
+          args.push(urls[j]); // add urls to end of current loop
+        }
+      } else {
+        console.log(`${args[i]} is not a valid url or filename`);
+        return;
+      }
+    }
+  }
+  
+  // check if all urls are valid json:
+  for (let i in args) {
+    if (!urlPointsToValidJSON(args[i])) {
       return;
     }
   }
   
-  for (let i in args) {
-    std.loadUrl(`${args[i]} --silent`);
-  }
-  // check if all urls are valid json
-  // test if valid json
   // add urls to repos.json
+  console.log(`Adding ${args} to JSON`);
+  addUrlsToJSON(args);
 }
 
 const backup = args => {
