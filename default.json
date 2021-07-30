@@ -8,7 +8,8 @@
       "sha256sum": "57e87c3193868f278c705d338125e9473c30f555f10ca1b00e50fd6af92b0b28",
       "install": "bin",
       "engines": [ "quickjs", "node" ],
-      "autoupdate": "false"
+      "autoupdate": "false",
+      "source": "StringManolo/default/"
     },
     "test": {
       "description": "Test jpk is working",
@@ -19,6 +20,7 @@
       "sha256sum": "fd53f512b7a5369150f9a72e6620b832d587ba144c59c5a67b52a135da0770f8",
       "install": "scripts",
       "engines": [ "node", "quickjs" ],
-      "autoupdate": "true"
+      "autoupdate": "true",
+      "source": "StringManolo/default/"
     }
 }

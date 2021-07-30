@@ -242,13 +242,15 @@ List all available or installed packages.
       debug(`Url (${urls[i]}) contains ${url}`);
       debug(`Full packages: ${JSON.stringify(fullPackages, null, 2)}`);
       debug(`Available Packages: ${availablePackages}`);
+      console.log("Packages:");
+      for (let i in availablePackages) {
+        console.log(`${availablePackages[i]} (${fullPackages[availablePackages[i]].version}) - ${fullPackages[availablePackages[i]].source} - ${fullPackages[availablePackages[i]].description}`); 
+      }
     }
   } else {
     console.log(`${args[0]} is not an available option. Chose available or installed`);
-
   }
 
-  console.log(`List ${args}`);
 }
 
 const remove = args => {
