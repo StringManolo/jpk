@@ -13,7 +13,7 @@
     "test": {
       "description": "Test jpk is working",
       "version": "0.0.1",
-      "url": "https://github.com/stringmanolo/jpk/default/test/test.js",
+      "url": "https://raw.githubusercontent.com/StringManolo/jpk/master/repos/default/test/test",
       "md5sum": "32950a7ca52c2892a73460dce55590d1", 
       "sha1sum": "acc838c947ed7079be59958b28239089f5172bb2",
       "sha256sum": "fd53f512b7a5369150f9a72e6620b832d587ba144c59c5a67b52a135da0770f8",
