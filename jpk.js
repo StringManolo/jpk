@@ -117,8 +117,7 @@ console.log("Trying to add urls to json");
     }
   }
 
-
-console.log(JSON.stringify(json, null, 2));
+  debug(JSON.stringify(json, null, 2));
   for (let i in urls) {
     json.urls.push(urls[i]);
   }
@@ -193,8 +192,9 @@ EXAMPLE OF VALID JSON FILE:
   }
   
   // add urls to repos.json
-  console.log(`Adding ${args} to JSON`);
+  debug(`Adding ${args} to JSON`);
   addUrlsToJSON(args);
+  console.log("Done.");
 }
 
 const backup = args => {
@@ -214,6 +214,40 @@ const install = args => {
 }
 
 const list = args => {
+  debug("list function called");
+  if (!args.length) {
+    console.log(`USAGE:
+jpk list <available|installed>
+
+DESCRIPTION:
+List all available or installed packages.
+`);
+    return;
+  }
+
+  if (args.length > 1) {
+    console.log("To many arguments");
+    return false;
+  }
+
+  if (args[0] === "installed") {
+
+  } else if (args[0] === "available") {
+    const urls = JSON.parse(std.loadFile("repos.json")).urls;
+    for (let i in urls) {
+      const url = JSON.parse(std.urlGet(`${urls[i]} --silent`)).urls;
+      const fullPackages = JSON.parse(std.urlGet(`${url} --silent`));
+      const availablePackages = Object.keys(fullPackages);
+
+      debug(`Url (${urls[i]}) contains ${url}`);
+      debug(`Full packages: ${JSON.stringify(fullPackages, null, 2)}`);
+      debug(`Available Packages: ${availablePackages}`);
+    }
+  } else {
+    console.log(`${args[0]} is not an available option. Chose available or installed`);
+
+  }
+
   console.log(`List ${args}`);
 }
 
