@@ -1,5 +1,9 @@
 import * as std from "std";
 
+const debug = text => {
+  console.log(`[DEBUG] ${text}`);
+}
+
 const getArguments = () => {
   scriptArgs.shift(); // remove script name
   return scriptArgs;
@@ -10,21 +14,29 @@ const isValidUrl = url => {
   let validUrl = false;
   if (/^https?\:\/\/[-a-z0-9@\._]{1,256}\.[a-z]{2,}/i.test(url)) { // clasic url
     validUrl = true;
+    debug(`${url} pass the clasic url test`);
   } else if (/^https?\:\/\/[a-z]{1,256}/.test(url)) { // localhost url
     validUrl = true;
+    debug(`${url} pass the hostname/localhost url test`);
   } else if (/^(https?\:\/\/)?[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}/.test(url))  { // ipv4 url
     validUrl = true;
+    debug(`${url} pass the ipv4 url test`);
   }
+
+  debug("After test if " + url + " is a valid url, the result is " + validUrl);
   return validUrl;
 }
 
 const isValidUrlsFile = filename => {
   let urls;
   try {
+    debug("Trying to load " + filename + " in memory as a list of urls");
     urls = std.loadFile(filename).split("\n");
   } catch(err) {
+    debug(err);
     return false;
   }
+  debug("Popping extra element from urls array");
   urls.pop();
 
   if (!urls.length) {
@@ -37,25 +49,49 @@ const isValidUrlsFile = filename => {
       return false;
     }
   }
+  debug(`Returning ${urls}`);
   return urls;
 }
 
 const urlPointsToValidJSON = url => {
-  const json = std.urlGet(url + " --silent");
-  const obj = JSON.parse(json);
+  debug(`Testing if ${url} points to a valid JSON file`);
+  let json;
+  try {
+    json = std.urlGet(url + " --silent");
+  } catch(err) {
+    debug(`Error downloading json from the url using curl command:
+${err}
+`);
+    return false;
+  }
+
+  let obj;
+  try {
+    obj = JSON.parse(json);
+  } catch(err) {
+    debug(`Error parsing response as a json file:
+${err}
+`);
+    return false;
+  }
+
   if (obj?.urls?.length) {
     for (let i in obj.urls) {
       if (!isValidUrl(obj.urls[i])) {
+	debug(`The extracted url ${obj.urls[i]} is not valid`);
         return false;
       }
     }
+    debug(`All urls are valid`);
     return true;
   } else {
+    debug(`The parsed json is missing "urls" array property`);
     return false;
   }
 }
 
 const addUrlsToJSON = urls => {
+console.log("Trying to add urls to json");
   let json;
   let fileExists = true;
   try {
@@ -95,6 +131,7 @@ console.log(JSON.stringify(json, null, 2));
 }
 
 const add = args => {
+  debug("add function called");
   if (!args.length) {
     console.log(`USAGE:
 jpk add <https://github.com/user/my-jpk-packages/hacking-packages.json>
@@ -128,6 +165,7 @@ EXAMPLE OF VALID JSON FILE:
     }
 }
 `)
+    debug("Not enought arguments to keep running.");
     return;
   }
  
@@ -146,7 +184,7 @@ EXAMPLE OF VALID JSON FILE:
       }
     }
   }
-  
+ 
   // check if all urls are valid json:
   for (let i in args) {
     if (!urlPointsToValidJSON(args[i])) {
