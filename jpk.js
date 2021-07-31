@@ -15,6 +15,19 @@ const run = command => {
   return msg;
 }
 
+const checksum = (path, hash) => {
+    let chs;
+  try {
+    chs = run(`${hash} ${path}`).split("\n")[0].split(" ")[0];
+  } catch(err) {
+    chs = `unable to run ${hash} on ${path}
+${err}
+`;
+  }
+  return chs;
+}
+
+
 const getArguments = () => {
   scriptArgs.shift(); // remove script name
   return scriptArgs;
@@ -313,6 +326,39 @@ Install a package.
         aux = run(`[ -f "$PREFIX/include/jpk/installed/${availablePackages[j].destFolder}/${filename}" ] && echo "true"`);
 	if (!aux) {
           console.log(`Error finding $PREFIX/include/jpk/installed/${availablePackages[j].destFolder}/${filename}". Try again.`);
+	  return;
+	}
+
+	const prefix = run(`echo "$PREFIX"`).split("\n")[0];
+        const chs = checksum(`${prefix}/include/jpk/installed/${availablePackages[j].destFolder}/${filename}`, "sha256sum");
+	if (chs != availablePackages[j].sha256sum) {
+          console.log(`ERROR, HASHES NOT MATCHING.
+Expected hash:
+${availablePackages[j].sha256sum}
+
+Real hash:
+${chs}
+
+What this means?
+The downloaded file is not what the author of the package said. Why?
+- The repository you're using is not updated to the match the real package.
+- The download did not complete, try to install the package again.
+- The file is modified without notice, can be malware.
+- A MITM attack replace file content.
+- The location of the resource changed.
+
+What can i do if i'm not sure?
+- Try to contact the repository owner.
+- Try to install the package from other repository.
+
+Package installation is not recommended.
+`);
+	  debug("Removing package because hashes are not matching.");
+	  run(`rm ${prefix}/include/jpk/installed/${availablePackages[j].destFolder}/${filename}`);
+	  return;
+
+	} else {
+	  console.log(`Hashes match.`);
 	}
 
 	console.log(`Package ${args[i]} installed.`);
@@ -324,7 +370,6 @@ Install a package.
           run(`touch "$PREFIX/include/jpk/installed/installed-packages.json"`);
 	}
 
-	const prefix = run(`echo "$PREFIX"`).split("\n")[0];
 	let installedPackagesJson;
 	try {
 	  installedPackagesJson = JSON.parse(std.loadFile(`${prefix}/include/jpk/installed/installed-packages.json`));
