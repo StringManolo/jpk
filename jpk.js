@@ -9,6 +9,29 @@ const getArguments = () => {
   return scriptArgs;
 }
 
+const getAvailablePackages = () => {
+  const urls = JSON.parse(std.loadFile("repos.json")).urls;
+  let packages = [];
+  for (let i in urls) {
+    const url = JSON.parse(std.urlGet(`${urls[i]} --silent`)).urls;
+    const fullPackages = JSON.parse(std.urlGet(`${url} --silent`));
+    const availablePackages = Object.keys(fullPackages);
+    for (let j in availablePackages) {
+      packages.push({
+        name: availablePackages[j],
+        from: fullPackages[availablePackages[j]].source,
+	url: fullPackages[availablePackages[j]].url, 
+	destFolder: fullPackages[availablePackages[j]].install,
+        sha256sum: fullPackages[availablePackages[j]].sha256sum
+      });
+    }
+  }
+  debug(`available packages for install:
+${JSON.stringify(packages, null, 2)}
+`);
+  return packages;
+}
+
 // May catch some user mistakes
 const isValidUrl = url => {
   let validUrl = false;
@@ -209,7 +232,28 @@ const help = args => {
   console.log(`help ${args}`);
 }
 
-const install = args => { 
+const install = args => {
+  debug("install function called");
+  if (!args.length) {
+    console.log(`USAGE:
+jpk install <package-name|package-name/from>
+
+DESCRIPTION:
+Install a package.
+`);
+    return;
+  }
+
+  const availablePackages = getAvailablePackages();
+  for (let i in args) {
+    for (let j in availablePackages) {
+      debug(`Testing requested package "${args[i]}" against found package "${availablePackages[j].name}"`);
+      if (args[i] == availablePackages[j].name) {
+        debug(`The package ${args[i]} was found in ${availablePackages[j].from}`);
+      }
+    }
+  }
+
   console.log(`Installing ${args}`);
 }
 
@@ -243,11 +287,11 @@ List all available or installed packages.
       debug(`Full packages: ${JSON.stringify(fullPackages, null, 2)}`);
       debug(`Available Packages: ${availablePackages}`);
       console.log("Packages:");
-      for (let i in availablePackages) {
-        console.log(`${availablePackages[i]}
-  from ${fullPackages[availablePackages[i]].source}
-  version - ${fullPackages[availablePackages[i]].version}
-  description - ${fullPackages[availablePackages[i]].description}\n`); 
+      for (let j in availablePackages) {
+        console.log(`${availablePackages[j]}
+  from ${fullPackages[availablePackages[j]].source}
+  version - ${fullPackages[availablePackages[j]].version}
+  description - ${fullPackages[availablePackages[j]].description}\n`);
       }
     }
   } else {
