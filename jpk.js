@@ -30,10 +30,16 @@ const getAvailablePackages = () => {
     for (let j in availablePackages) {
       packages.push({
         name: availablePackages[j],
+	description: fullPackages[availablePackages[j]].description,
+	version: fullPackages[availablePackages[j]].version,
         from: fullPackages[availablePackages[j]].source,
 	url: fullPackages[availablePackages[j]].url, 
 	destFolder: fullPackages[availablePackages[j]].install,
-        sha256sum: fullPackages[availablePackages[j]].sha256sum
+        sha256sum: fullPackages[availablePackages[j]].sha256sum,
+	md5sum: fullPackages[availablePackages[j]].md5sum,
+	sha1sum: fullPackages[availablePackages[j]].sha1sum,
+	engines: fullPackages[availablePackages[j]].engines,
+	autoupdate: fullPackages[availablePackages[j]].autoupdate
       });
     }
   }
@@ -386,6 +392,25 @@ List all available or installed packages.
   }
 
   if (args[0] === "installed") {
+    const prefix = run(`echo "$PREFIX"`).split("\n")[0];
+      let installedPackagesJson;
+    try {
+      installedPackagesJson = JSON.parse(std.loadFile(`${prefix}/include/jpk/installed/installed-packages.json`));
+    } catch(err) {
+      debug(`No installed packages found
+${err}
+`);
+      return;
+    }
+
+    console.log("Packages:");
+    for (let i in installedPackagesJson.packages) {
+      console.log(`${installedPackagesJson.packages[i].name}
+  from ${installedPackagesJson.packages[i].from}
+  version - ${installedPackagesJson.packages[i].version}
+  description - ${installedPackagesJson.packages[i].description}\n`);
+    }
+    return;
 
   } else if (args[0] === "available") {
     const urls = JSON.parse(std.loadFile("repos.json")).urls;
