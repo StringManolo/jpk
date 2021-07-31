@@ -4,6 +4,17 @@ const debug = text => {
   console.log(`[DEBUG] ${text}`);
 }
 
+const run = command => {
+  const fd = std.popen(command, "r");
+  let msg = "",
+  r = "";
+
+  while(( r = fd.getline() ) != null) {
+    msg += r + "\n";
+  }
+  return msg;
+}
+
 const getArguments = () => {
   scriptArgs.shift(); // remove script name
   return scriptArgs;
@@ -250,11 +261,103 @@ Install a package.
       debug(`Testing requested package "${args[i]}" against found package "${availablePackages[j].name}"`);
       if (args[i] == availablePackages[j].name) {
         debug(`The package ${args[i]} was found in ${availablePackages[j].from}`);
+	debug(`Testing if jpk folder exists`); 
+	let jpkFolderExists = false;
+        let aux = run('[ -d "$PREFIX/include/jpk" ] && echo "true"');
+	if (!aux) {
+          debug("$PREFIX/include/jpk folder not found, creating...");
+	  run('mkdir "$PREFIX/include/jpk"');
+	  aux = run('[ -d "$PREFIX/include/jpk" ] && echo "true"');
+	  if (!aux) {
+            console.log(`ERROR: Unable to create $PREFIX/include/jpk folder. Please do it manually and try again`);
+	    return;
+	  }
+	}
+
+	debug(`Testing if jpk/installed folder exists`);
+        aux = run('[ -d "$PREFIX/include/jpk/installed" ] && echo "true"');
+        if (!aux) {
+          debug("$PREFIX/include/jpk/installed folder not found, creating...");
+	  run('mkdir "$PREFIX/include/jpk/installed"');
+	  aux = run('[ -d "$PREFIX/include/jpk/installed" ] && echo "true"');
+	  if (!aux) {
+            console.log(`ERROR: Unable to create $PREFIX/include/jpk/installed folder. Please do it manually and try again`);
+	    return;
+	  }
+	}
+
+
+        debug(`Testing if jpk/installed/${availablePackages[j].destFolder} folder exists`);
+        aux = run(`[ -d "$PREFIX/include/jpk/installed/${availablePackages[j].destFolder}" ] && echo "true"`);
+        if (!aux) {
+	  debug(`$PREFIX/include/jpk/installed/${availablePackages[j].destFolder} folder not found, creating...`);
+	  run(`mkdir "$PREFIX/include/jpk/installed/${availablePackages[j].destFolder}"`);
+          aux = run(`[ -d "$PREFIX/include/jpk/installed/${availablePackages[j].destFolder}" ] && echo "true"`);
+	  if (!aux) {
+            console.log(`ERROR: Unable to create $PREFIX/include/jpk/installed/${availablePackages[j].destFolder} folder. Please do it manually and try again`);
+	    return;
+	  }
+	}
+
+        debug(`Installing package...`);
+	let filename = availablePackages[j].url.split("/");
+	filename = filename[filename.length-1];
+        run(`curl ${availablePackages[j].url} --silent -o "$PREFIX/include/jpk/installed/${availablePackages[j].destFolder}/${filename}" `);
+
+        aux = run(`[ -f "$PREFIX/include/jpk/installed/${availablePackages[j].destFolder}/${filename}" ] && echo "true"`);
+	if (!aux) {
+          console.log(`Error finding $PREFIX/include/jpk/installed/${availablePackages[j].destFolder}/${filename}". Try again.`);
+	}
+
+	console.log(`Package ${args[i]} installed.`);
+
+	debug(`Adding package to list of installed packages...`);
+	aux = run(`[ -f "$PREFIX/include/jpk/installed/installed-packages.json" ] && echo "true"`);
+        if (!aux) {
+          debug(`Creating installed-packages.json file...`);
+          run(`touch "$PREFIX/include/jpk/installed/installed-packages.json"`);
+	}
+
+	const prefix = run(`echo "$PREFIX"`).split("\n")[0];
+	let installedPackagesJson;
+	try {
+	  installedPackagesJson = JSON.parse(std.loadFile(`${prefix}/include/jpk/installed/installed-packages.json`));
+	} catch(err) {
+          debug(`ERROR: Unable to parse file as JSON
+${err}
+
+`);
+	}
+
+	debug(`Opening ${prefix}/include/jpk/installed/installed-packages.json file`);
+        const fd = std.open(`${prefix}/include/jpk/installed/installed-packages.json`, "w");
+    
+	if (!installedPackagesJson) {
+	  const ipj = {
+	    packages: []
+	  };
+	  ipj.packages.push(availablePackages[j]);
+          fd.puts(JSON.stringify(ipj, null, 2));
+	} else {
+          if (installedPackagesJson?.packages.length >= 0) {
+            installedPackagesJson.packages.push(availablePackages[j]);
+
+	  } else {
+            const ipj = {
+              packages: []
+	    };
+	    ipj.packages.push(availablePackages[j]);
+	    fd.puts(JSON.stringify(ipj, null, 2));
+	  }
+	}
+
+	fd.close();
+        debug(`Package added to $PREFIX/include/jpk/installed/installed-packages.json`);
+	console.log("Done.");
       }
     }
   }
 
-  console.log(`Installing ${args}`);
 }
 
 const list = args => {
