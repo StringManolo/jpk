@@ -333,24 +333,32 @@ ${err}
         const fd = std.open(`${prefix}/include/jpk/installed/installed-packages.json`, "w");
     
 	if (!installedPackagesJson) {
+	  debug(`Unable to load file installed-packages.json`);
 	  const ipj = {
 	    packages: []
 	  };
 	  ipj.packages.push(availablePackages[j]);
           fd.puts(JSON.stringify(ipj, null, 2));
+	  debug(`Package pushed to new installed-packages.json`);
 	} else {
+	  debug(`Found installed-packages.json, testing if file have a packages property`);
           if (installedPackagesJson?.packages.length >= 0) {
+	    debug(`package property found`);
             installedPackagesJson.packages.push(availablePackages[j]);
-
+	    fd.puts(JSON.stringify(installedPackagesJson, null, 2));
+            debug(`Pushed new package to packages array`);
 	  } else {
+	    debug(`package property not found, creating a new file`);
             const ipj = {
               packages: []
 	    };
 	    ipj.packages.push(availablePackages[j]);
 	    fd.puts(JSON.stringify(ipj, null, 2));
+	    debug(`New installed-packages.json file created to replace corrupted version`);
 	  }
 	}
 
+	debug(`Closing installed-packages.json file`);
 	fd.close();
         debug(`Package added to $PREFIX/include/jpk/installed/installed-packages.json`);
 	console.log("Done.");
