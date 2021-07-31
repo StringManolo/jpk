@@ -62,6 +62,37 @@ ${JSON.stringify(packages, null, 2)}
   return packages;
 }
 
+const getInstalledPackages = () => {
+  const prefix = run(`echo "$PREFIX"`).split("\n")[0];
+  let installedPackagesJson;
+  try {
+    installedPackagesJson = JSON.parse(std.loadFile(`${prefix}/include/jpk/installed/installed-packages.json`));
+  } catch(err) {
+    debug(`No installed packages found
+${err}
+`);
+    return;
+  }
+
+  let packages = [];
+  for (let i in installedPackagesJson.packages) {
+    packages.push({
+        name: installedPackagesJson.packages[i].name,
+        description: installedPackagesJson.packages[i].description,
+        version: installedPackagesJson.packages[i].version,
+        from: installedPackagesJson.packages[i].source,
+        url: installedPackagesJson.packages[i].url,
+        destFolder: installedPackagesJson.packages[i].destFolder,
+        sha256sum: installedPackagesJson.packages[i].sha256sum,
+        md5sum: installedPackagesJson.packages[i].md5sum,
+        sha1sum: installedPackagesJson.packages[i].sha1sum,
+        engines: installedPackagesJson.packages[i].engines,
+        autoupdate: installedPackagesJson.packages[i].autoupdate
+      });
+  }
+  return packages;
+}
+
 // May catch some user mistakes
 const isValidUrl = url => {
   let validUrl = false;
@@ -497,6 +528,47 @@ const usage = () => {
   console.log(`Usage: `);
 }
 
+const runPackage = args => {
+  if(!args.length) {
+    usage();
+    return;
+  }
+
+  const pkg = args[0];
+  debug(`Testing if ${pkg} is an installed package`);
+
+  const packages = getInstalledPackages();
+  for (let i in packages) {
+    if (packages[i].name == pkg) {
+      debug(`Package found. Testing package type...`);
+      if (packages[i].destFolder == "scripts") {
+        debug(`Package ${pkg} is a script`);
+	const engine = packages[i].engines[0];
+	debug(`Running the script using the designed engine ${engine}.`);
+	args.shift();
+	const prefix = run(`echo "$PREFIX"`).split("\n")[0];
+	debug(`${engine} ${prefix}/include/jpk/installed/${packages[i].destFolder}/${pkg} ${args.join(" ")}`);
+
+	console.log(run(`${engine} ${prefix}/include/jpk/installed/${packages[i].destFolder}/${pkg} ${args.join(" ")}`));
+	return;
+      } else if (packages[i].destFolder == "bin") {
+	debug(`Package ${pkg} is executable`);
+	const prefix = run(`echo "$PREFIX"`).split("\n")[0];
+	const path = `${prefix}/include/jpk/installed/${packages[i].destFolder}/`;
+	run(`chmod +775 ${path}${pkg}`);
+	console.log(run(`${path}./${pkg} ${args.join(" ")}`));
+	return;
+      } else {
+        debug(`Package ${pkg} is a ${packages[i].desfolder} unknown file type, unable torun`);
+	return;
+      }
+
+    }
+  }
+
+
+}
+
 const parseArguments = args => {
   switch(args[0]) {
     case "a":
@@ -557,7 +629,7 @@ const parseArguments = args => {
 
     default:
       // test if args is a valid installed package or script name
-      usage(); 
+      runPackage(args); 
     return;
   }
 }
