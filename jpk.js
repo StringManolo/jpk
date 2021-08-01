@@ -285,10 +285,6 @@ const backup = args => {
   console.log(`backup ${args}`);
 }
 
-const check = args => {
-  console.log(`checksum ${args}`);
-}
-
 const help = args => {
   console.log(`help ${args}`);
 }
@@ -480,7 +476,7 @@ ${err}
     }
 
     console.log("Packages:");
-    for (let i in installedPackagesJson.packages) {
+    for (let i in installedPackagesJson?.packages) {
       console.log(`${installedPackagesJson.packages[i].name}
   from ${installedPackagesJson.packages[i].from}
   version - ${installedPackagesJson.packages[i].version}
@@ -581,13 +577,6 @@ const parseArguments = args => {
     case "backup":
       args.shift();
       backup(args);
-    return;
-
-    case "c":
-    case "check":
-    case "checksum":
-      args.shift();
-      check(args);
     return;
 
     case "h":
